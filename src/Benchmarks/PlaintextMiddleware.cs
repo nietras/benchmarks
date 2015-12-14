@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Http;
+using Microsoft.Extensions.Primitives;
 
 namespace Benchmarks
 {
@@ -13,6 +14,8 @@ namespace Benchmarks
     {
         private static readonly byte[] _helloWorldPayload = Encoding.UTF8.GetBytes("Hello, World!");
         private static readonly PathString _path = new PathString("/plaintext");
+        private static readonly StringValues _encodedContentType = StringValues.CreatePreEncoded("text/plain", Encoding.ASCII);
+        private static readonly StringValues _encodedContentLength = StringValues.CreatePreEncoded("13", Encoding.ASCII);
 
         private readonly RequestDelegate _next;
         
@@ -28,10 +31,10 @@ namespace Benchmarks
                 httpContext.Request.Path.StartsWithSegments(_path, StringComparison.OrdinalIgnoreCase))
             {
                 httpContext.Response.StatusCode = 200;
-                httpContext.Response.ContentType = "text/plain";
+                httpContext.Response.ContentType = _encodedContentType;
                 // HACK: Setting the Content-Length header manually avoids the cost of serializing the int to a string.
                 //       This is instead of: httpContext.Response.ContentLength = _helloWorldPayload.Length;
-                httpContext.Response.Headers["Content-Length"] = "13";
+                httpContext.Response.Headers["Content-Length"] = _encodedContentLength;
                 return httpContext.Response.Body.WriteAsync(_helloWorldPayload, 0, _helloWorldPayload.Length);
             }
 
