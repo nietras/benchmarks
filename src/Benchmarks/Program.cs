@@ -4,7 +4,7 @@
 using System;
 using System.Threading;
 using Microsoft.AspNet.Hosting;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 
 namespace Benchmarks
 {
@@ -12,10 +12,26 @@ namespace Benchmarks
     {
         public static void Main(string[] args)
         {
+            Console.WriteLine();
+            Console.WriteLine("ASP.NET 5 Benchmarks");
+            Console.WriteLine("--------------------");
+
+            var config = new ConfigurationBuilder()
+                .AddCommandLine(args)
+                .Build();
+
+            if (string.IsNullOrEmpty(config["scenarios"]))
+            {
+                Console.WriteLine("Which scenarios would you like to enable?:");
+                Console.WriteLine("  1: Raw middleware");
+                Console.WriteLine("  2: All MV");
+                Console.Write("1, 2, 3, A(ll)> ");
+            }
+
             var app = new WebApplicationBuilder()
-                            .UseConfiguration(WebApplicationConfiguration.GetDefault(args))
-                            .UseStartup<Startup>()
-                            .Build();
+                .UseConfiguration(WebApplicationConfiguration.GetDefault(args))
+                .UseStartup<Startup>()
+                .Build();
 
             // Run the interaction on a separate thread as we don't have Console.KeyAvailable on .NET Core so can't
             // do a pre-emptive check before we call Console.ReadKey (which blocks, hard)
@@ -47,7 +63,7 @@ namespace Benchmarks
             });
             interactiveThread.IsBackground = true;
             interactiveThread.Start();
-            
+
             app.Run();
         }
 
